@@ -122,7 +122,7 @@ def record_get(arguments):
 
     if not data:
         log.error("No records found for '%s' in domain '%s'", arguments.name, domain)
-        exit(0)
+        exit(1)
 
     if arguments.name:
         data = [record for record in data if record["name"] == arguments.name]
@@ -134,7 +134,7 @@ def record_get(arguments):
         data = [record for record in data if arguments.content in record["content"]]
 
     if not data:
-        log.error("No filtered records found for '%s' in domain '%s'", arguments.name, domain)
+        log.warning("Records were found for '%s' in domain '%s', but not matching your criteria", arguments.name, domain)
         exit(0)
 
     if arguments.func is record_get:
