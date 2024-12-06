@@ -68,9 +68,9 @@ def parse_args():  # pylint: disable=too-many-locals,too-many-statements
     parser_record_add.add_argument('--debug', action='store_true', help='Enable debug mode')
     parser_record_add.set_defaults(func=record_add)
 
-    # create the parser for the "record" -> "delete" command
+    # create the parser for the "record" -> "del" command
     DESCRIPTION = 'Delete dns records'
-    parser_record_del = record_subparsers.add_parser('delete', description=DESCRIPTION, help=DESCRIPTION)
+    parser_record_del = record_subparsers.add_parser('del', description=DESCRIPTION, help=DESCRIPTION)
     parser_record_del.add_argument('-n', '--name', type=str, help='Name', required=True)
     parser_record_del.add_argument('-t', '--type', type=str, choices=["A", "AAAA", "CAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SRV", "TLSA", "TXT"], help='Type')
     parser_record_del.add_argument('-c', '--content', type=str, help='Content')
