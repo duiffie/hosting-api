@@ -121,11 +121,14 @@ def record_get(arguments):
     data = json.loads(json.dumps(response.json()['data']))
 
     if not data:
-        log.error("No records found for '%s' in domain '%s'", arguments.name, domain)
+        log.error("No records found for domain '%s'", domain)
         exit(1)
 
-    if arguments.name:
-        data = [record for record in data if record["name"] == arguments.name]
+    data = [record for record in data if record["name"] == arguments.name]
+
+    if not data:
+        log.error("No records found for '%s' in domain '%s'", arguments.name, domain)
+        exit(1)
 
     if arguments.type:
         data = [record for record in data if record["type"] == arguments.type]
