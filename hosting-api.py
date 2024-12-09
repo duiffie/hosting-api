@@ -144,7 +144,7 @@ def record_get(arguments):
     if arguments.type:
         data = [record for record in data if record["type"] == arguments.type]
 
-/usr/bin/python3 /home/cdist/bin/hosting-api.py record add -n test123.airbusds.nl -t A -c 127.0.0.1    if arguments.content:
+    if arguments.content:
         data = [record for record in data if arguments.content in record["content"]]
 
     if not data:
