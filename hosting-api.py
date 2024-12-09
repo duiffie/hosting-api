@@ -192,7 +192,7 @@ def record_del(arguments):
     headers['Content-Type'] = 'application/json'
 
     # get matching record(s):
-    recorddata = json.loads(record_get(Namespace(func=arguments.func,name=arguments.name,type=arguments.type,content=arguments.content)))
+    recorddata = json.loads(record_get(Namespace(func=arguments.func,domain=arguments.domain,name=arguments.name,type=arguments.type,content=arguments.content)))
 
     if not recorddata:
         log.error("Record '%s' cannot be found in domain '%s'", arguments.name, domain)
