@@ -132,7 +132,7 @@ def record_get(arguments):
         log.error("No record(s) found for domain '%s'", domain)
         exit(1)
 
-   if arguments.domain and arguments.name:
+    if arguments.domain and arguments.name:
         data = [record for record in data if arguments.name in record["name"]]
     elif arguments.name:
         data = [record for record in data if record["name"] == arguments.name]
