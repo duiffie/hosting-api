@@ -51,7 +51,8 @@ def parse_args():  # pylint: disable=too-many-locals,too-many-statements
     # create the parser for the "record" -> "get" command
     DESCRIPTION = 'Get (a) dns record(s)'
     parser_record_get = record_subparsers.add_parser('get', description=DESCRIPTION, help=DESCRIPTION)
-    parser_record_get.add_argument('-n', '--name', type=str, help='Name (returns record(s) matching this name)', required=True)
+    parser_record_get.add_argument('-d', '--domain', type=str, help='Domain (returns all record(s) in this domain)')
+    parser_record_get.add_argument('-n', '--name', type=str, help='Name (returns record(s) matching this name)')
     parser_record_get.add_argument('-t', '--type', type=str, choices=["A", "AAAA", "CAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SRV", "TLSA", "TXT"], help='Type (returns record(s) matching this type)')
     parser_record_get.add_argument('-c', '--content', type=str, help='Content (returns record(s) matching this content)')
     parser_record_get.add_argument('--debug', action='store_true', help='Enable debug mode')
@@ -107,7 +108,14 @@ def domain_get(arguments):
 def record_get(arguments):
     """Function to get dns-records"""
 
-    domain = get_fld(arguments.name, fix_protocol=True)
+    if not arguments.domain and not arguments.name:
+        log.error("Either option -d (domain) or -n (name) is required")
+        exit(1)
+
+    if arguments.domain:
+        domain = arguments.domain
+    else:
+        domain = get_fld(arguments.name, fix_protocol=True)
 
     request = '/domains/' + domain + '/dns'
 
@@ -124,11 +132,12 @@ def record_get(arguments):
         log.error("No record(s) found for domain '%s'", domain)
         exit(1)
 
-    data = [record for record in data if record["name"] == arguments.name]
+    if arguments.name:
+        data = [record for record in data if record["name"] == arguments.name]
 
-    if not data:
-        log.error("No record(s) found for '%s' in domain '%s'", arguments.name, domain)
-        exit(1)
+        if not data:
+            log.error("No record(s) found for '%s' in domain '%s'", arguments.name, domain)
+            exit(1)
 
     if arguments.type:
         data = [record for record in data if record["type"] == arguments.type]
