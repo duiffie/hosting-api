@@ -39,7 +39,7 @@ def parse_args():  # pylint: disable=too-many-locals,too-many-statements
     # create the parser for the "domain" -> "get" command
     DESCRIPTION = 'Get domain objects'
     parser_domain_get = domain_subparsers.add_parser('get', description=DESCRIPTION, help=DESCRIPTION)
-    parser_domain_get.add_argument('-d', '--domain', type=str, help='Domain name', required=True)
+    parser_domain_get.add_argument('-d', '--domain', type=str, help='Domain name')
     parser_domain_get.add_argument('--debug', action='store_true', help='Enable debug mode')
     parser_domain_get.set_defaults(func=domain_get)
 
