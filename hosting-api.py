@@ -221,7 +221,10 @@ def record_upd(arguments):
         payload[0]['type'] = arguments.type
 
     if arguments.content:
-        payload[0]['content'] = arguments.content
+        if arguments.type == "TXT":
+            payload[0]['content'] = '"' + arguments.content + '"'
+        else:
+            payload[0]['content'] = arguments.content
 
     if arguments.ttl:
         payload[0]['ttl'] = arguments.ttl
