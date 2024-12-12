@@ -52,6 +52,7 @@ def parse_args():  # pylint: disable=too-many-locals,too-many-statements
     DESCRIPTION = 'Get (a) dns record(s)'
     parser_record_get = record_subparsers.add_parser('get', description=DESCRIPTION, help=DESCRIPTION)
     parser_record_get.add_argument('-d', '--domain', type=str, help='Domain (returns all record(s) in this domain)')
+    parser_record_get.add_argument('-i', '--id', type=int, help='Id')
     parser_record_get.add_argument('-n', '--name', type=str, help='Name (returns record(s) matching this name)')
     parser_record_get.add_argument('-t', '--type', type=str, choices=["A", "AAAA", "CAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SRV", "TLSA", "TXT"], help='Type (returns record(s) matching this type)')
     parser_record_get.add_argument('-c', '--content', type=str, help='Content (returns record(s) matching this content)')
@@ -68,6 +69,18 @@ def parse_args():  # pylint: disable=too-many-locals,too-many-statements
     parser_record_add.add_argument('--prio', type=int, default=0, help='Prio (default: 0)')
     parser_record_add.add_argument('--debug', action='store_true', help='Enable debug mode')
     parser_record_add.set_defaults(func=record_add)
+
+    # create the parser for the "record" -> "upd" command
+    DESCRIPTION = 'Update dns records'
+    parser_record_upd = record_subparsers.add_parser('upd', description=DESCRIPTION, help=DESCRIPTION)
+    parser_record_upd.add_argument('-i', '--id', type=int, help='Id', required=True)
+    parser_record_upd.add_argument('-n', '--name', type=str, help='Name', required=True)
+    parser_record_upd.add_argument('-t', '--type', type=str, choices=["A", "AAAA", "CAA", "CNAME", "MX", "NAPTR", "NS", "PTR", "SRV", "TLSA", "TXT"], help='New type')
+    parser_record_upd.add_argument('-c', '--content', type=str, help='New content')
+    parser_record_upd.add_argument('--ttl', type=int, choices=[60, 300, 3600, 86400], default=3600, help='New TTL')
+    parser_record_upd.add_argument('--prio', type=int, default=0, help='New prio')
+    parser_record_upd.add_argument('--debug', action='store_true', help='Enable debug mode')
+    parser_record_upd.set_defaults(func=record_upd)
 
     # create the parser for the "record" -> "del" command
     DESCRIPTION = 'Delete dns records'
@@ -147,6 +160,9 @@ def record_get(arguments):
     if arguments.content:
         data = [record for record in data if arguments.content in record["content"]]
 
+    if arguments.id:
+        data = [record for record in data if record["id"] == arguments.id]
+
     if not data:
         log.warning("Record(s) were found for '%s' in domain '%s', but not matching your criteria", arguments.name, domain)
         exit(0)
@@ -182,6 +198,52 @@ def record_add(arguments):
     data = json.loads(json.dumps(response.json()['data']))
     print(json.dumps(data))
 
+
+def record_upd(arguments):
+    """Function to update dns records"""
+    domain = get_fld(arguments.name, fix_protocol=True)
+
+    request = '/domains/' + domain + '/dns'
+
+    headers['Content-Type'] = 'application/json'
+
+    # get matching record(s):
+    #recorddata = json.loads(record_get(Namespace(func=arguments.func,domain='',name=arguments.name,id=arguments.id,type='',content='')))
+    recorddata = record_get(Namespace(func=arguments.func,domain='',name=arguments.name,id=arguments.id,type='',content=''))
+
+    if not recorddata:
+        log.error("Record '%s' cannot be found in domain '%s'", arguments.name, domain)
+        sys.exit(1)
+
+    payload = json.loads(recorddata)
+
+    if arguments.type:
+        payload[0]['type'] = arguments.type
+
+    if arguments.content:
+        payload[0]['content'] = arguments.content
+
+    if arguments.ttl:
+        payload[0]['ttl'] = arguments.ttl
+
+    if arguments.prio:
+        payload[0]['prio'] = arguments.prio
+
+    payload = json.dumps(payload)
+
+    if payload != recorddata:
+        try:
+            response = requests.put(api_config['Api']['Url'] + request, headers = headers, data = payload)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as error:
+            log.error("Unable to update record '%s' (%s)", arguments.name, error)
+            sys.exit(1)
+
+        log.info("DNS record '%s' successfully updated", arguments.name)
+
+        data = json.loads(json.dumps(response.json()['data']))
+        return(json.dumps(data))
+    log.info("No changes found, not updating record")
 
 def record_del(arguments):
     """Function to delete dns records"""
